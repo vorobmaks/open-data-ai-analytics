@@ -6,5 +6,4 @@
 - Data loading module
 - Data quality analysis module
 - Data research and modeling module
-- Data visualization module
-- Reports and figures
+- Reports
