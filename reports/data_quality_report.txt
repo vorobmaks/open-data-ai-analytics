@@ -1,0 +1,29 @@
+Rows: 987804
+Columns: 10
+
+Missing values:
+legal_entity_id       0
+area                  0
+gromada_koatuu        0
+gromada_name          0
+settlement_koatuu     0
+settlement            0
+settlement_type       0
+person_gender         0
+person_age            0
+count_declarations    0
+
+Duplicate rows:
+0
+
+Data types:
+legal_entity_id       object
+area                  object
+gromada_koatuu         int64
+gromada_name          object
+settlement_koatuu      int64
+settlement            object
+settlement_type       object
+person_gender         object
+person_age            object
+count_declarations     int64
