@@ -1,0 +1,4 @@
+Model: Random Forest Regressor
+MAE: 33.5424
+R2: 0.0391
+Features: area, person_gender, person_age
