@@ -1,16 +1,10 @@
 __pycache__/
 *.pyc
 
-.ipynb_checkpoints/
-
 .venv/
 .env
 
 data/
 data/**
-*.csv
-*.parquet
-*.zip
-*.gz
 
 .idea/

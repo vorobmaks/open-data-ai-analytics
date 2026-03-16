@@ -36,6 +36,11 @@ jobs:
           py src\data_research.py >> artifacts\visualization\run.log
           py src\visualization.py >> artifacts\visualization\run.log
 
+      - name: Copy generated figures
+        shell: cmd
+        run: |
+          if exist reports\figures xcopy reports\figures artifacts\visualization\figures /E /I /Y
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
