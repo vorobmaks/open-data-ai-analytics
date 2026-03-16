@@ -12,25 +12,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check Python
+        shell: cmd
         run: |
-          python --version
-          python -m pip --version
+          py --version
+          py -m pip --version
 
       - name: Install dependencies
+        shell: cmd
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install pandas matplotlib scikit-learn
+          py -m pip install --upgrade pip
+          py -m pip install pandas matplotlib scikit-learn
 
       - name: Create artifact directory
+        shell: cmd
         run: |
-          mkdir artifacts
-          mkdir artifacts\visualization
+          if not exist artifacts mkdir artifacts
+          if not exist artifacts\visualization mkdir artifacts\visualization
 
       - name: Run visualization pipeline
+        shell: cmd
         run: |
-          python src/data_load.py > artifacts\visualization\run.log
-          python src/data_research.py >> artifacts\visualization\run.log
-          python src/visualization.py >> artifacts\visualization\run.log
+          py src\data_load.py > artifacts\visualization\run.log
+          py src\data_research.py >> artifacts\visualization\run.log
+          py src\visualization.py >> artifacts\visualization\run.log
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
