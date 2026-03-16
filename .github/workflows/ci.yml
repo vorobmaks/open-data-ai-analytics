@@ -1,24 +1,23 @@
-name: CI
+name: CI (modules)
 
 on:
   push:
-    branches: [main]
-
+    branches: ["main"]
   pull_request:
-    branches: [main]
-
+    branches: ["main"]
   workflow_dispatch:
     inputs:
       module:
-        description: "Module to run"
+        description: "Which module to run"
         required: true
         default: "all"
         type: choice
         options:
           - all
           - data_load
-          - data_quality
+          - data_quality_analysis
           - data_research
+          - visualization
 
 jobs:
   run-modules:
@@ -27,48 +26,58 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - module: data_load
-            script: src/data_load.py
-            log: artifacts/data_load_log.txt
-          - module: data_quality
-            script: src/data_quality_analysis.py
-            log: artifacts/data_quality_log.txt
-          - module: data_research
-            script: src/data_research.py
-            log: artifacts/data_research_log.txt
+        module: [data_load, data_quality_analysis, data_research, visualization]
+
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas matplotlib seaborn
+          pip install pandas matplotlib scikit-learn
 
-      - name: Create artifacts folder
-        run: mkdir -p artifacts
+      - name: Create artifact directory
+        run: mkdir -p artifacts/${{ matrix.module }}
 
-      - name: Skip non-selected module
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.module != 'all' && github.event.inputs.module != matrix.module
+      - name: Run selected module
         run: |
-          echo "Skipping ${{ matrix.module }} because manually selected module is ${{ github.event.inputs.module }}"
-          exit 0
+          echo "Running ${{ matrix.module }}"
 
-      - name: Run module
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module
-        run: |
-          python ${{ matrix.script }} > ${{ matrix.log }} 2>&1
+          if [ "${{ matrix.module }}" = "data_load" ]; then
+            python src/data_load.py > artifacts/${{ matrix.module }}/run.log 2>&1
+            cp -r data/raw artifacts/${{ matrix.module }}/ || true
+          fi
+
+          if [ "${{ matrix.module }}" = "data_quality_analysis" ]; then
+            python src/data_load.py > artifacts/${{ matrix.module }}/run.log 2>&1
+            python src/data_quality_analysis.py >> artifacts/${{ matrix.module }}/run.log 2>&1
+            cp reports/data_quality_report.txt artifacts/${{ matrix.module }}/ || true
+          fi
+
+          if [ "${{ matrix.module }}" = "data_research" ]; then
+            python src/data_load.py > artifacts/${{ matrix.module }}/run.log 2>&1
+            python src/data_research.py >> artifacts/${{ matrix.module }}/run.log 2>&1
+            cp -r reports/data_research artifacts/${{ matrix.module }}/ || true
+          fi
+
+          if [ "${{ matrix.module }}" = "visualization" ]; then
+            python src/data_load.py > artifacts/${{ matrix.module }}/run.log 2>&1
+            python src/data_research.py >> artifacts/${{ matrix.module }}/run.log 2>&1
+            python src/visualization.py >> artifacts/${{ matrix.module }}/run.log 2>&1
+            cp -r reports/figures artifacts/${{ matrix.module }}/ || true
+          fi
 
       - name: Upload artifacts
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module
         uses: actions/upload-artifact@v4
         with:
           name: artifacts-${{ matrix.module }}
-          path: artifacts
+          path: artifacts/${{ matrix.module }}
