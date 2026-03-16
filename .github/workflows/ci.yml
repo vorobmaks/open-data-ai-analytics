@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+    inputs:
+      module:
+        description: "Module to run"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - data_load
+          - data_quality
+          - data_research
+
+jobs:
+  run-modules:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        module:
+          - data_load
+          - data_quality
+          - data_research
+
+    if: |
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.module == 'all' ||
+      github.event.inputs.module == matrix.module
+
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install pandas matplotlib seaborn
+
+      - name: Create artifacts folder
+        run: mkdir -p artifacts
+
+      - name: Run module
+        run: |
+
+          if [ "${{ matrix.module }}" == "data_load" ]; then
+            python src/data_load.py > artifacts/data_load_log.txt
+          fi
+
+          if [ "${{ matrix.module }}" == "data_quality" ]; then
+            python src/data_quality_analysis.py > artifacts/data_quality_log.txt
+          fi
+
+          if [ "${{ matrix.module }}" == "data_research" ]; then
+            python src/data_research.py > artifacts/data_research_log.txt
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.module }}
+          path: artifacts
