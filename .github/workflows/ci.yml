@@ -22,23 +22,23 @@ on:
 
 jobs:
   run-modules:
-
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        module:
-          - data_load
-          - data_quality
-          - data_research
-
-    if: |
-      github.event_name != 'workflow_dispatch' ||
-      github.event.inputs.module == 'all' ||
-      github.event.inputs.module == matrix.module
+        include:
+          - module: data_load
+            script: src/data_load.py
+            log: artifacts/data_load_log.txt
+          - module: data_quality
+            script: src/data_quality_analysis.py
+            log: artifacts/data_quality_log.txt
+          - module: data_research
+            script: src/data_research.py
+            log: artifacts/data_research_log.txt
 
     steps:
-
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -49,27 +49,25 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install pandas matplotlib seaborn
 
       - name: Create artifacts folder
         run: mkdir -p artifacts
 
-      - name: Run module
+      - name: Skip non-selected module
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.module != 'all' && github.event.inputs.module != matrix.module
         run: |
+          echo "Skipping ${{ matrix.module }} because manually selected module is ${{ github.event.inputs.module }}"
+          exit 0
 
-          if [ "${{ matrix.module }}" == "data_load" ]; then
-            python src/data_load.py > artifacts/data_load_log.txt
-          fi
-
-          if [ "${{ matrix.module }}" == "data_quality" ]; then
-            python src/data_quality_analysis.py > artifacts/data_quality_log.txt
-          fi
-
-          if [ "${{ matrix.module }}" == "data_research" ]; then
-            python src/data_research.py > artifacts/data_research_log.txt
-          fi
+      - name: Run module
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module
+        run: |
+          python ${{ matrix.script }} > ${{ matrix.log }} 2>&1
 
       - name: Upload artifacts
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module
         uses: actions/upload-artifact@v4
         with:
           name: artifacts-${{ matrix.module }}
