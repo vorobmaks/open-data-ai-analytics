@@ -1,4 +1,4 @@
-name: CI (self-hosted)
+name: CI (self-hosted runner)
 
 on:
   workflow_dispatch:
@@ -14,17 +14,20 @@ jobs:
       - name: Check Python
         run: |
           python --version
-          pip --version
+          python -m pip --version
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas matplotlib scikit-learn
+          python -m pip install pandas matplotlib scikit-learn
 
-      - name: Run visualization pipeline
+      - name: Create artifact directory
         run: |
           mkdir artifacts
           mkdir artifacts\visualization
+
+      - name: Run visualization pipeline
+        run: |
           python src/data_load.py > artifacts\visualization\run.log
           python src/data_research.py >> artifacts\visualization\run.log
           python src/visualization.py >> artifacts\visualization\run.log
