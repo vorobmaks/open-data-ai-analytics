@@ -1,0 +1,30 @@
+package_update: true
+package_upgrade: false
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - git
+
+runcmd:
+  # -- Docker installation --
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update -y
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # -- Docker service --
+  - systemctl enable docker
+  - systemctl start docker
+
+  # -- Clone project --
+  - git clone https://github.com/vorobmaks/open-data-ai-analytics /opt/app
+
+  # -- Run Docker Compose (compose.yaml в корені репо) --
+  - docker compose -f /opt/app/compose.yaml up -d --build
+
+final_message: "cloud-init завершено. Застосунок запущено на порту 5000."
