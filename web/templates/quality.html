@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}— Якість даних{% endblock %}
+{% block content %}
+<h2>Якість даних</h2>
+<p class="page-subtitle">Результати аналізу коректності, повноти, пропусків та дублікатів</p>
+
+{% if report %}
+<div class="cards">
+  <div class="card">
+    <div class="label">Всього рядків</div>
+    <div class="value">{{ "{:,}".format(report.total_rows).replace(",", "\u00a0") }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Колонок</div>
+    <div class="value">{{ report.total_columns }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Дублікати</div>
+    <div class="value" style="color:{% if report.duplicates > 0 %}#f59e0b{% else %}var(--green){% endif %}">
+      {{ report.duplicates }}
+    </div>
+  </div>
+  <div class="card">
+    <div class="label">Унікальних областей</div>
+    <div class="value">{{ report.unique_areas }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Вік (мін / макс)</div>
+    <div class="value" style="font-size:20px">{{ report.age_stats.min|int }} / {{ report.age_stats.max|int }}</div>
+    <div class="sub">середній: {{ report.age_stats.avg }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Декларацій (сер.)</div>
+    <div class="value">{{ report.count_declarations_stats.avg }}</div>
+    <div class="sub">max: {{ "{:,}".format(report.count_declarations_stats.max) }}</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Пропущені значення</h3>
+  <div class="kv">
+    {% for col, val in report.missing_values.items() %}
+    <div class="kv-item">
+      <div class="k">{{ col }}</div>
+      <div class="v" style="color:{% if val > 0 %}#f59e0b{% else %}var(--green){% endif %}">{{ val }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="section">
+  <h3>Унікальні значення статі</h3>
+  {% for g in report.unique_genders %}
+    <span class="badge blue">{{ g }}</span>
+  {% endfor %}
+</div>
+
+{% if report.column_types %}
+<div class="section">
+  <h3>Типи колонок (SQLite)</h3>
+  <div class="kv">
+    {% for col, dtype in report.column_types.items() %}
+    {% if col != 'id' %}
+    <div class="kv-item">
+      <div class="k">{{ col }}</div>
+      <div class="v" style="font-size:14px; color:var(--muted)">{{ dtype }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% if txt %}
+<div class="section">
+  <h3>Повний звіт (текст)</h3>
+  <pre>{{ txt }}</pre>
+</div>
+{% endif %}
+
+{% if not report and not txt %}
+<p class="empty">Звіт ще не сформовано. Запустіть сервіс data_quality_analysis.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}— Головна{% endblock %}
+{% block content %}
+<div class="hero">
+  <div class="eyebrow">Лабораторна робота №3</div>
+  <h2>Контейнеризація модулів<br><strong>проєкту за допомогою Docker</strong></h2>
+  <p>Аналіз відкритих даних про активні декларації лікарів за віком та статтю (МОЗ України).</p>
+</div>
+
+<div class="pipeline">
+  <div class="pipeline-step">
+    <div class="step-num">01</div>
+    <div class="step-name">data_load</div>
+    <div class="step-desc">Завантаження CSV → SQLite</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="step-num">02</div>
+    <div class="step-name">data_quality</div>
+    <div class="step-desc">Перевірка якості даних</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="step-num">03</div>
+    <div class="step-name">data_research</div>
+    <div class="step-desc">Аналіз та статистика</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="step-num">04</div>
+    <div class="step-name">visualization</div>
+    <div class="step-desc">Побудова графіків</div>
+  </div>
+  <div class="pipeline-step">
+    <div class="step-num">05</div>
+    <div class="step-name">web</div>
+    <div class="step-desc">Веб-інтерфейс</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Технічний стек</h3>
+  <span class="badge blue">Docker Compose</span>
+  <span class="badge blue">SQLite</span>
+  <span class="badge green">Python 3.11</span>
+  <span class="badge green">Flask</span>
+  <span class="badge green">pandas</span>
+  <span class="badge green">matplotlib</span>
+  <span class="badge">Docker volumes</span>
+  <span class="badge">Docker networks</span>
+</div>
+
+<div class="section">
+  <h3>Навігація</h3>
+  <p style="font-size:13px; color:var(--muted); line-height:1.8;">
+    Використовуйте бічне меню для перегляду результатів роботи кожного сервісу.<br>
+    <strong style="color:var(--text)">Дані</strong> — перші 100 записів з бази даних.<br>
+    <strong style="color:var(--text)">Якість даних</strong> — звіт про пропуски, дублікати, типи.<br>
+    <strong style="color:var(--text)">Дослідження</strong> — статистика та підсумки аналізу.<br>
+    <strong style="color:var(--text)">Візуалізація</strong> — згенеровані графіки.
+  </p>
+</div>
+{% endblock %}
