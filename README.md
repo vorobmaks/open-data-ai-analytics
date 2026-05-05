@@ -84,3 +84,73 @@ docker compose down -v
 
 ## Healthcheck
 Сервіс `web` має healthcheck (перевірка кожні 30с, таймаут 10с, 3 спроби).
+
+## Моніторинг (Prometheus + Grafana)
+
+### Структура
+```
+monitoring/
+├── prometheus/
+│   └── prometheus.yml
+├── grafana/
+│   ├── dashboards/
+│   │   └── main-dashboard.json
+│   └── provisioning/
+│       ├── datasources/
+│       │   └── prometheus.yml
+│       └── dashboards/
+│           └── dashboards.yml
+└── docker-compose.monitoring.yml
+```
+
+### Сервіси моніторингу
+| Сервіс | Опис | Порт |
+|---|---|---|
+| `prometheus` | Збір та зберігання метрик | 9090 |
+| `grafana` | Візуалізація та дашборди | **3000** |
+| `node-exporter` | Метрики Linux VM (CPU, RAM, диск, мережа) | — |
+| `cadvisor` | Метрики Docker-контейнерів | — |
+
+### Джерела метрик (scrape jobs)
+- **prometheus** — самомоніторинг Prometheus
+- **node-exporter** — стан VM: CPU, пам'ять, диск, мережа
+- **cadvisor** — стан контейнерів: CPU, пам'ять на контейнер
+- **web-app** — метрики Flask-застосунку через `/metrics` (`web_requests_total`, `web_request_duration_seconds`)
+
+### Відкриті порти на Azure VM
+| Порт | Призначення |
+|---|---|
+| 22 | SSH |
+| 5000 | Веб-застосунок |
+| 3000 | Grafana |
+| 9090 | Prometheus |
+
+### Як розгортається моніторинг
+Моніторинг запускається автоматично через `cloud-init` після старту основного стеку:
+```bash
+docker compose -f /opt/app/monitoring/docker-compose.monitoring.yml up -d
+```
+Стек моніторингу підключається до мережі `open-data-analytics_app-net`, щоб мати доступ до контейнера `web`.
+
+### Як відкрити Grafana
+```
+http://<PUBLIC_IP>:3000
+```
+- Логін: `admin`
+- Пароль: `admin123`
+
+Datasource Prometheus підключається автоматично через provisioning (`http://prometheus:9090`).
+
+### Дашборд — панелі
+Дашборд **"Open Data AI Analytics — System Monitoring"** завантажується автоматично і містить 8 панелей:
+
+| # | Панель | Тип | Метрика |
+|---|---|---|---|
+| 1 | CPU Usage — VM | timeseries | `node_cpu_seconds_total` |
+| 2 | Memory Usage — VM | timeseries | `node_memory_MemTotal/Available_bytes` |
+| 3 | Running Containers | stat | `container_last_seen` |
+| 4 | Total Memory — VM | stat | `node_memory_MemTotal_bytes` |
+| 5 | Disk Usage — Root Filesystem | gauge | `node_filesystem_size/free_bytes` |
+| 6 | CPU Usage — web container | timeseries | `container_cpu_usage_seconds_total` |
+| 7 | Memory Usage — web container | timeseries | `container_memory_usage_bytes` |
+| 8 | Network I/O — VM | timeseries | `node_network_receive/transmit_bytes_total` |

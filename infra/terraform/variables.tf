@@ -40,6 +40,18 @@ variable "web_port" {
   default     = "5000"
 }
 
+variable "grafana_port" {
+  description = "Порт Grafana"
+  type        = string
+  default     = "3000"
+}
+
+variable "prometheus_port" {
+  description = "Порт Prometheus"
+  type        = string
+  default     = "9090"
+}
+
 variable "repo_url" {
   description = "URL GitHub-репозиторію для git clone"
   type        = string

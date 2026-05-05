@@ -2,7 +2,9 @@ import sqlite3
 import json
 import os
 from pathlib import Path
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, request
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+import time
 
 app = Flask(__name__)
 
@@ -10,10 +12,44 @@ DB_PATH = os.getenv("DB_PATH", "/app/db/data.db")
 REPORTS_DIR = Path("/app/reports")
 FIGURES_DIR = REPORTS_DIR / "figures"
 
+# --- Метрики ---
+REQUEST_COUNT = Counter(
+    'web_requests_total',
+    'Total number of HTTP requests',
+    ['method', 'endpoint', 'status']
+)
+
+REQUEST_LATENCY = Histogram(
+    'web_request_duration_seconds',
+    'HTTP request latency in seconds',
+    ['endpoint']
+)
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+# --- Middleware для автоматичного збору метрик ---
+@app.before_request
+def before_request():
+    request._start_time = time.time()
+
+@app.after_request
+def after_request(response):
+    latency = time.time() - request._start_time
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.path,
+        status=response.status_code
+    ).inc()
+    REQUEST_LATENCY.labels(endpoint=request.path).observe(latency)
+    return response
+
+# --- Endpoint для Prometheus ---
+@app.route('/metrics')
+def metrics():
+    return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
 
 @app.route("/")
 def index():

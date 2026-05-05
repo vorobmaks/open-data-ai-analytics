@@ -27,4 +27,8 @@ runcmd:
   # -- Run Docker Compose (compose.yaml в корені репо) --
   - docker compose -f /opt/app/compose.yaml up -d --build
 
-final_message: "cloud-init завершено. Застосунок запущено на порту 5000."
+  # -- Run monitoring stack --
+  - sleep 30
+  - docker compose -f /opt/app/monitoring/docker-compose.monitoring.yml up -d
+
+final_message: "cloud-init завершено. Застосунок: 5000, Grafana: 3000, Prometheus: 9090."
