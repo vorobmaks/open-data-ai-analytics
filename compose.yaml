@@ -1,0 +1,88 @@
+name: open-data-analytics
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  db-data:
+  reports-data:
+
+services:
+
+  data_load:
+    build: ./data_load
+    container_name: data_load
+    environment:
+      - DB_PATH=/app/db/data.db
+    volumes:
+      - db-data:/app/db
+      - reports-data:/app/reports
+    networks:
+      - app-net
+    restart: "no"
+
+  data_quality_analysis:
+    build: ./data_quality_analysis
+    container_name: data_quality_analysis
+    environment:
+      - DB_PATH=/app/db/data.db
+    volumes:
+      - db-data:/app/db
+      - reports-data:/app/reports
+    networks:
+      - app-net
+    depends_on:
+      data_load:
+        condition: service_completed_successfully
+    restart: "no"
+
+  data_research:
+    build: ./data_research
+    container_name: data_research
+    environment:
+      - DB_PATH=/app/db/data.db
+    volumes:
+      - db-data:/app/db
+      - reports-data:/app/reports
+    networks:
+      - app-net
+    depends_on:
+      data_load:
+        condition: service_completed_successfully
+    restart: "no"
+
+  visualization:
+    build: ./visualization
+    container_name: visualization
+    volumes:
+      - reports-data:/app/reports
+    networks:
+      - app-net
+    depends_on:
+      data_research:
+        condition: service_completed_successfully
+    restart: "no"
+
+  web:
+    build: ./web
+    container_name: web
+    environment:
+      - DB_PATH=/app/db/data.db
+    volumes:
+      - db-data:/app/db
+      - reports-data:/app/reports
+    networks:
+      - app-net
+    ports:
+      - "5000:5000"
+    depends_on:
+      visualization:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

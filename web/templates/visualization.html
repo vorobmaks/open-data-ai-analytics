@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}— Візуалізація{% endblock %}
+{% block content %}
+<h2>Візуалізація</h2>
+<p class="page-subtitle">Графіки, побудовані сервісом visualization</p>
+
+{% if figures %}
+<div class="figures-grid">
+  {% for fig in figures %}
+  <div class="figure-card">
+    <img src="/figures/{{ fig }}" alt="{{ fig }}"/>
+    <div class="fig-label">{{ fig }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">Графіки ще не збережено. Запустіть сервіс visualization.</p>
+{% endif %}
+{% endblock %}

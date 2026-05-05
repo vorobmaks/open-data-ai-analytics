@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}— Дослідження{% endblock %}
+{% block content %}
+<h2>Дослідження даних</h2>
+<p class="page-subtitle">Базовий аналіз набору даних, статистики та підсумки</p>
+
+{% if metrics %}
+<div class="cards">
+  <div class="card">
+    <div class="label">Всього декларацій</div>
+    <div class="value" style="font-size:20px">{{ "{:,}".format(metrics.total_declarations).replace(",", "\u00a0") }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Середнє на запис</div>
+    <div class="value">{{ metrics.avg_declarations_per_record }}</div>
+  </div>
+  <div class="card">
+    <div class="label">Унікальних областей</div>
+    <div class="value">{{ metrics.unique_areas }}</div>
+  </div>
+</div>
+
+{% if metrics.top_age_by_declarations %}
+<div class="section">
+  <h3>Вік з найбільшою кількістю декларацій</h3>
+  <div class="kv">
+    <div class="kv-item">
+      <div class="k">Вік</div>
+      <div class="v">{{ metrics.top_age_by_declarations.person_age|int }}</div>
+    </div>
+    <div class="kv-item">
+      <div class="k">Декларацій</div>
+      <div class="v" style="color:var(--accent)">
+        {{ "{:,}".format(metrics.top_age_by_declarations.count_declarations|int) }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if metrics.top_gender_gap_age %}
+<div class="section">
+  <h3>Найбільший гендерний розрив</h3>
+  <div class="kv">
+    <div class="kv-item">
+      <div class="k">Вік</div>
+      <div class="v">{{ metrics.top_gender_gap_age.person_age|int }}</div>
+    </div>
+    <div class="kv-item">
+      <div class="k">Розрив</div>
+      <div class="v" style="color:#f59e0b">
+        {{ "{:,}".format(metrics.top_gender_gap_age.gender_gap|int) }}
+      </div>
+    </div>
+    {% for k, v in metrics.top_gender_gap_age.items() %}
+      {% if k not in ('person_age', 'gender_gap') %}
+      <div class="kv-item">
+        <div class="k">{{ k }}</div>
+        <div class="v" style="font-size:16px">{{ "{:,}".format(v|int) }}</div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% if txt %}
+<div class="section">
+  <h3>Звіт метрик</h3>
+  <pre>{{ txt }}</pre>
+</div>
+{% endif %}
+
+{% if not metrics and not txt %}
+<p class="empty">Результати дослідження ще не сформовано. Запустіть сервіс data_research.</p>
+{% endif %}
+{% endblock %}
