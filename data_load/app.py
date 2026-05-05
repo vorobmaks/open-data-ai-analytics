@@ -14,7 +14,9 @@ DB_PATH = os.getenv("DB_PATH", "/app/db/data.db")
 Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 print("Downloading data...")
-urllib.request.urlretrieve(DATA_URL, CSV_FILE)
+req = urllib.request.Request(DATA_URL, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req) as response, open(CSV_FILE, "wb") as f:
+    f.write(response.read())
 print(f"Data saved to {CSV_FILE}")
 
 df = pd.read_csv(CSV_FILE, encoding="utf-8")
