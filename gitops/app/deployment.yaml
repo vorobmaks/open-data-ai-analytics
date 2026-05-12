@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-data-web
+  namespace: open-data
+  labels:
+    app: open-data-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: open-data-web
+  template:
+    metadata:
+      labels:
+        app: open-data-web
+    spec:
+      containers:
+        - name: web
+          image: vorobmaks/open-data-ai-analytics:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: APP_VERSION
+              value: "gitops-v1"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 20
+            periodSeconds: 20
